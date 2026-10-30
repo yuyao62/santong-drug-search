@@ -1,0 +1,112 @@
+[
+  {
+    "code": "DEMO001",
+    "name": "示範甲膜衣錠",
+    "englishName": "FICTIONAL DEMO ONLY",
+    "ingredients": [
+      {
+        "name": "DEMO INGREDIENT A",
+        "strength": "5 mg"
+      }
+    ],
+    "form": "膜衣錠",
+    "specification": "每錠",
+    "manufacturer": "虛構示範藥廠",
+    "price": 2,
+    "validFrom": "2026-01-01",
+    "validTo": "2027-12-31"
+  },
+  {
+    "code": "DEMO002",
+    "name": "示範乙膜衣錠",
+    "englishName": "FICTIONAL DEMO ONLY",
+    "ingredients": [
+      {
+        "name": "DEMO INGREDIENT A",
+        "strength": "5 mg"
+      }
+    ],
+    "form": "膜衣錠",
+    "specification": "每錠",
+    "manufacturer": "虛構示範藥廠",
+    "price": 1.5,
+    "validFrom": "2026-01-01",
+    "validTo": "2027-12-31"
+  },
+  {
+    "code": "DEMO003",
+    "name": "示範丙緩釋錠",
+    "englishName": "FICTIONAL DEMO ONLY",
+    "ingredients": [
+      {
+        "name": "DEMO INGREDIENT A",
+        "strength": "5 mg"
+      }
+    ],
+    "form": "緩釋錠",
+    "specification": "每錠",
+    "manufacturer": "虛構示範藥廠",
+    "price": 2,
+    "validFrom": "2026-01-01",
+    "validTo": "2027-12-31"
+  },
+  {
+    "code": "DEMO004",
+    "name": "示範丁高含量錠",
+    "englishName": "FICTIONAL DEMO ONLY",
+    "ingredients": [
+      {
+        "name": "DEMO INGREDIENT A",
+        "strength": "10 mg"
+      }
+    ],
+    "form": "膜衣錠",
+    "specification": "每錠",
+    "manufacturer": "虛構示範藥廠",
+    "price": 2,
+    "validFrom": "2026-01-01",
+    "validTo": "2027-12-31"
+  },
+  {
+    "code": "DEMO005",
+    "name": "示範複方甲錠",
+    "englishName": "FICTIONAL DEMO ONLY",
+    "ingredients": [
+      {
+        "name": "DEMO INGREDIENT A",
+        "strength": "5 mg"
+      },
+      {
+        "name": "DEMO INGREDIENT B",
+        "strength": "10 mg"
+      }
+    ],
+    "form": "膜衣錠",
+    "specification": "每錠",
+    "manufacturer": "虛構示範藥廠",
+    "price": 2,
+    "validFrom": "2026-01-01",
+    "validTo": "2027-12-31"
+  },
+  {
+    "code": "DEMO006",
+    "name": "示範複方乙錠",
+    "englishName": "FICTIONAL DEMO ONLY",
+    "ingredients": [
+      {
+        "name": "DEMO INGREDIENT B",
+        "strength": "10 mg"
+      },
+      {
+        "name": "DEMO INGREDIENT A",
+        "strength": "5 mg"
+      }
+    ],
+    "form": "膜衣錠",
+    "specification": "每錠",
+    "manufacturer": "虛構示範藥廠",
+    "price": 2,
+    "validFrom": "2026-01-01",
+    "validTo": "2027-12-31"
+  }
+]
