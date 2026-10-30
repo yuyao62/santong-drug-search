@@ -1,4 +1,4 @@
-import {canCompare,applyNameCorrections,validate,search,sameThree,activeOn,atDate,fromCSV,toCSV} from './core.js';
+import {canCompare,applyNameCorrections,validate,search,sameThree,activeOn,atDate,fromCSV,toCSV} from './core.js?v=20261030-compound2';
 const $=id=>document.getElementById(id);
 const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 let official=[],drugs=[],visible=[],selected=null,limit=40,mode='正式資料';
