@@ -13,7 +13,7 @@ export function validate(drugs) {
     const ingredients = new Set();
     for (const i of d.ingredients) {
       if (!i || typeof i.name !== 'string' || !i.name.trim() || typeof i.strength !== 'string' || !i.strength.trim()) throw new Error(`${d.code} 成分與含量不可空白。`);
-      if (ingredients.has(normalize(i.name))) throw new Error(`${d.code} 成分重複。`);
+      if (d.matchEligible !== false && ingredients.has(normalize(i.name))) throw new Error(`${d.code} 成分重複。`);
       ingredients.add(normalize(i.name));
     }
     for (const k of ['validFrom','validTo']) {
@@ -21,7 +21,12 @@ export function validate(drugs) {
     }
     if (d.validFrom > d.validTo) throw new Error(`${d.code} 日期範圍錯誤。`);
     if (d.price !== null && (typeof d.price !== 'number' || !Number.isFinite(d.price) || d.price < 0)) throw new Error(`${d.code} 支付價錯誤，未知請用 null。`);
-    for (const key of ['englishName','manufacturer']) if (d[key] != null && typeof d[key] !== 'string') throw new Error(`${d.code} ${key} 格式錯誤。`);
+    if(d.matchEligible != null && typeof d.matchEligible !== 'boolean')throw new Error('matchEligible 格式錯誤');
+    if(d.pricePeriods != null){
+      if(!Array.isArray(d.pricePeriods)||!d.pricePeriods.length)throw new Error('價格期間格式錯誤');
+      for(const p of d.pricePeriods)if(!Array.isArray(p)||p.length!==3||!/^\d{4}-\d{2}-\d{2}$/.test(p[0])||!/^\d{4}-\d{2}-\d{2}$/.test(p[1])||p[0]>p[1]||(p[2]!==null && (typeof p[2]!=='number'||!Number.isFinite(p[2])||p[2]<0)))throw new Error('價格期間內容錯誤');
+    }
+    for (const key of ['englishName','manufacturer','group','snapshotDate','matchReason']) if (d[key] != null && typeof d[key] !== 'string') throw new Error(`${d.code} ${key} 格式錯誤。`);
   }
   return drugs;
 }
@@ -29,8 +34,17 @@ export function validate(drugs) {
 export function signature(d) {
   return JSON.stringify([d.ingredients.map(i => [normalize(i.name),normalize(i.strength)]).sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b))), normalize(d.form),normalize(d.specification)]);
 }
-export const sameThree = (a,b) => signature(a) === signature(b);
-export const activeOn = (d,date) => d.validFrom <= date && date <= d.validTo;
+export const sameThree = (a,b) => a.matchEligible !== false && b.matchEligible !== false && (!a.group || !b.group || normalize(a.group) === normalize(b.group)) && signature(a) === signature(b);
+export function periodOn(d,date) {
+  if (!d.pricePeriods) return d.validFrom <= date && date <= d.validTo ? [d.validFrom,d.validTo,d.price] : null;
+  return d.pricePeriods.filter(p => p[0] <= date && date <= p[1]).sort((a,b) => b[0].localeCompare(a[0]))[0] || null;
+}
+export const activeOn = (d,date) => { const p=periodOn(d,date);return !!p && p[2] != null && p[2] > 0; };
+export function atDate(d,date) {
+  if(!d.pricePeriods)return d;
+  const p=periodOn(d,date);
+  return {...d,price:p ? p[2] : null,validFrom:p ? p[0] : d.validFrom,validTo:p ? p[1] : d.validTo};
+}
 export const search = (drugs,query) => {
   const tokens = normalize(query).split(' ').filter(Boolean);
   return drugs.filter(d => tokens.every(t => normalize([d.code,d.name,d.englishName,d.manufacturer,...d.ingredients.map(i=>i.name)].join(' ')).includes(t)));

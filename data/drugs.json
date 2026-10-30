@@ -1,1 +1,43 @@
-{"source":"尚未匯入正式資料","updatedAt":null,"drugs":[]}
+{
+  "source": "中央健康保險署｜115年11月查詢檔（使用者提供）",
+  "updatedAt": null,
+  "snapshotDate": "2026-10-30",
+  "importedAt": "2026-10-30T11:27:12.840824+00:00",
+  "recordCount": 225028,
+  "drugCount": 45224,
+  "payableCount": 13838,
+  "shards": [
+    "drugs-00.json.gz",
+    "drugs-01.json.gz",
+    "drugs-02.json.gz",
+    "drugs-03.json.gz",
+    "drugs-04.json.gz",
+    "drugs-05.json.gz",
+    "drugs-06.json.gz",
+    "drugs-07.json.gz"
+  ],
+  "files": [
+    {
+      "filename": "all1_11511_1.TXT",
+      "sha256": "8a3109f312c907e033e3acc8c28ca084f70074de1991ba1c338121d21b37e857",
+      "records": 112514
+    },
+    {
+      "filename": "all1_11511_2.TXT",
+      "sha256": "49a07e6ae97996f3c23cd482f75f082ff5f36ee0c5ed9ba56bbbd3de3106bb67",
+      "records": 112514
+    }
+  ],
+  "eligibility": {
+    "非口服固體劑型，須核對給藥規格": 15927,
+    "可比對單方候選": 20634,
+    "複方須先核對完整成分": 8445,
+    "成分或含量欄位不完整": 54,
+    "原檔含無法解碼字元，須核對": 123,
+    "缺少分類分組資料": 1,
+    "品名可能含特殊釋放型態，須核對": 40
+  },
+  "formatSource": "https://www.nhi.gov.tw/ch/dl-23028-4a6a13a8a1ad4f30b04b9aa4b222227d-1.pdf",
+  "license": "政府資料開放授權條款第1版",
+  "notes": "原檔含歷次價格異動。名稱成分採快照版本，價格按有效期間查詢。金額為0或空白不列為有效正支付價。複方等未核對品項不自動判定三同。"
+}

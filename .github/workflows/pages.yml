@@ -22,11 +22,15 @@ jobs:
         with:
           node-version: '24'
       - run: npm test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/build_sqlite.py
       - name: Prepare website
         run: |
           mkdir -p _site/data
           cp index.html style.css app.js core.js _site/
-          cp data/*.json data/*.csv _site/data/
+          cp data/*.json data/*.csv data/*.gz _site/data/
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
