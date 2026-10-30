@@ -10,31 +10,22 @@ function render(){
   const date=$('date').value;
   if(!date){$('message').textContent='請選擇有效查詢日期。';return;}
   const snapshotMismatch=selected?.snapshotDate && date!==selected.snapshotDate;
-  let list=selected?(snapshotMismatch?[]:drugs.filter(d=>d.code!==selected.code&&sameThree(selected,d))):search(drugs,$('query').value);
+  let list=selected?(snapshotMismatch?[]:drugs.filter(d=>d.code===selected.code||sameThree(selected,d))):search(drugs,$('query').value);
   list=list.map(d=>atDate(d,date));
   if($('active').checked)list=list.filter(d=>activeOn(d,date));
   list.sort($('sort').value==='price'?(a,b)=>(a.price??Infinity)-(b.price??Infinity):(a,b)=>a.name.localeCompare(b.name,'zh-Hant'));
   visible=list;$('count').textContent=`${list.length.toLocaleString()} 個品項`;$('export').disabled=!list.length;
-  $('resultTitle').textContent=selected?'三同候選品項':'查詢結果';
+  $('resultTitle').textContent=selected?'三同候選藥品（含原品項）':'藥品搜尋結果（尚未比對）';
   const container=$('results');container.replaceChildren();
   if(selected && snapshotMismatch)$('message').textContent=`三同比對請選擇快照日 ${selected.snapshotDate}。其他日期僅供查詢價格有效期間。`;
   if(!list.length){const n=el('div',null,'empty');n.append(el('strong',drugs.length?'沒有符合條件的品項':'先加入藥品資料，開始查詢。'),el('p',drugs.length?'試試其他關鍵字、日期或取消篩選。三同比對僅限快照日；查無候選不代表沒有其他藥品。':'可匯入已整理的 JSON / CSV，或按「體驗示範」查看操作。正式藥品主檔尚未載入。'));container.append(n);}
-  for(const d of list.slice(0,limit)){
-    const row=el('article',null,'drug'),body=el('div'),side=el('div',null,'drug-side');
-    body.append(el('span',d.code,'code'),el('h3',d.name));
-    if(d.englishName)body.append(el('span',d.englishName,'code'));
-    if(d.nameVerification){const note=el('a','中文名稱已核對 ↗','tag');note.href=d.nameVerification.source;note.target='_blank';note.rel='noopener';note.title=`${d.nameVerification.license}；原始名稱：${d.originalName}`;body.append(el('br'),note);}
-    if(d.nameReviewReason)body.append(el('div','中文名稱待核對：'+d.nameReviewReason,'badge'));
-    if(mode==='示範資料')body.append(el('div','虛構示範品項，非實際藥品','badge'));
-    const p=el('p',detail(d),'detail');p.style.whiteSpace='pre-line';body.append(p);
-    if(!activeOn(d,date))body.append(el('span','查詢日無有效正支付價','badge'));
-    const price=el('div',d.price==null?'—':d.price===0?'0（待核對）':`$${d.price.toFixed(2)}`,'price');price.append(el('small',' / 原檔計價單位'));side.append(price);
-    if(d.matchReason)body.append(el('div',d.matchReason,'badge'));
-    const b=el('button',d.matchEligible===false?'待核對':(selected?'以此品項比對':'查詢三同'));b.disabled=d.matchEligible===false;b.addEventListener('click',()=>choose(d));side.append(b);row.append(body,side);container.append(row);
+  if(list.length){
+    const table=drugTable(list.slice(0,limit),selected);
+    container.append(table);
   }
   $('more').hidden=list.length<=limit;
 }
-function choose(d){selected=d;limit=40;const box=$('selected');box.hidden=false;box.replaceChildren(el('span','正在比對的原品項','tag'),el('h3',`${d.name} · ${d.code}`));const p=el('p',detail(d),'detail');p.style.whiteSpace='pre-line';box.append(p,el('p','清單已排除原品項。完整成分、含量、劑型、規格及官方分類分組均須一致；僅供藥師核對，不代表可直接替代。','detail'));const b=el('button','返回搜尋結果','secondary');b.onclick=()=>{clearSelection();render();};box.append(b);render();box.scrollIntoView({behavior:'smooth',block:'nearest'});}
+function choose(d){selected=d;limit=40;const box=$('selected');box.hidden=false;box.replaceChildren(el('span','正在比對的原品項','tag'),el('h3',`${d.name} · ${d.code}`));const p=el('p',detail(d),'detail');p.style.whiteSpace='pre-line';box.append(p,el('p','清單包含原品項並標示「查詢藥品」。完整成分、含量、劑型、規格及官方分類分組均須一致；僅供藥師核對，不代表可直接替代。','detail'));const b=el('button','返回搜尋結果','secondary');b.onclick=()=>{clearSelection();render();};box.append(drugTable([d],d),b);render();box.scrollIntoView({behavior:'smooth',block:'nearest'});}
 function clearSelection(){selected=null;$('selected').hidden=true;limit=40;}
 let searchTimer=null,composing=false;
 function searchNow(){clearTimeout(searchTimer);clearSelection();render();}
@@ -77,3 +68,23 @@ try{const response=await fetch('./data/drugs.json');if(!response.ok)throw Error(
     $('message').textContent=`正式主檔：${data.recordCount.toLocaleString()} 筆歷次紀錄，${data.drugCount.toLocaleString()} 個健保碼。成分與品名為 ${data.snapshotDate} 快照；價格依所選日期查詢。複方與未完整核對的劑型不自動比對。另有 ${official.filter(d=>d.nameVerification).length} 個健保碼的中文名稱已依食藥署資料核對修正，${nameAudit.pendingCount} 項中文名稱待核對。`;
   }else official=validate(data.drugs);drugs=official;officialMeta={...officialMeta,...data};setMode('正式資料',data.source,data.snapshotDate||data.updatedAt);render();}
 catch{$('metadata').textContent='正式資料載入失敗';$('message').textContent='請透過網站網址或本機 HTTP 伺服器開啟，可繼續使用匯入功能。';render();}
+
+function drugTable(rows,original){
+ const wrap=el('div',null,'table-scroll'),table=el('table',null,'drug-table'),head=el('thead'),tr=el('tr');
+ for(const label of ['健保碼','藥品名稱','規格量','支付價','劑型','成分／分類分組','備註'])tr.append(el('th',label));
+ head.append(tr);table.append(head);const body=el('tbody');
+ for(const d of rows){
+  const row=el('tr');row.append(el('td',d.code,'code'));
+  const name=el('td');name.append(el('strong',d.englishName||d.name),el('div',d.name,'detail'));row.append(name);
+  row.append(el('td',d.specification),el('td',d.price==null?'—':d.price.toFixed(2)),el('td',d.form));
+  const composition=el('td');composition.append(el('div',d.ingredients.map(i=>i.name+' '+i.strength).join(' + ')),el('div',d.group||'','detail'));row.append(composition);
+  const note=el('td');
+  if(original&&d.code===original.code)note.append(el('span','查詢藥品','tag'));
+  else if(original){note.append(el('span',d.price!=null&&original.price!=null&&d.price!==original.price?'支付價不同：'+d.price.toFixed(2)+'（原品項 '+original.price.toFixed(2)+'）':'支付價相同','badge'));}
+  else {const b=el('button',d.matchEligible===false?'待核對':'查詢三同');b.disabled=d.matchEligible===false;b.onclick=()=>choose(d);note.append(b);}
+  if(d.matchReason)note.append(el('div',d.matchReason,'detail'));
+  if(d.nameReviewReason)note.append(el('div','中文名待核對','badge'));
+  row.append(note);body.append(row);
+ }
+ table.append(body);wrap.append(table);return wrap;
+}
