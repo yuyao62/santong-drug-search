@@ -47,7 +47,11 @@ export function validate(drugs) {
 export function signature(d) {
   return JSON.stringify([d.ingredients.map(i => [normalize(i.name),normalize(i.strength)]).sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b))), normalize(d.form),normalize(d.specification)]);
 }
-export const sameThree = (a,b) => a.matchEligible !== false && b.matchEligible !== false && (!a.group || !b.group || normalize(a.group) === normalize(b.group)) && signature(a) === signature(b);
+export function canCompare(d) {
+ if(d.matchEligible!==false)return true;
+ return d.matchReason==='複方須先核對完整成分' && d.ingredients.length>=2 && d.ingredients.length<6 && d.ingredients.every(i=>i.name && i.strength && !/[?\uFFFD]/u.test(i.name+i.strength) && i.strength!=='未提供');
+}
+export const sameThree = (a,b) => canCompare(a) && canCompare(b) && (!a.group || !b.group || normalize(a.group) === normalize(b.group)) && signature(a) === signature(b);
 export function periodOn(d,date) {
   if (!d.pricePeriods) return d.validFrom <= date && date <= d.validTo ? [d.validFrom,d.validTo,d.price] : null;
   return d.pricePeriods.filter(p => p[0] <= date && date <= p[1]).sort((a,b) => b[0].localeCompare(a[0]))[0] || null;
