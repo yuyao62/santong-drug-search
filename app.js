@@ -1,4 +1,4 @@
-import {applyNameCorrections,validate,search,sameThree,activeOn,atDate,fromCSV,toCSV} from './core.js';
+import {canCompare,applyNameCorrections,validate,search,sameThree,activeOn,atDate,fromCSV,toCSV} from './core.js';
 const $=id=>document.getElementById(id);
 const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 let official=[],drugs=[],visible=[],selected=null,limit=40,mode='正式資料';
@@ -15,7 +15,7 @@ function render(){
   if($('active').checked)list=list.filter(d=>activeOn(d,date));
   list.sort($('sort').value==='price'?(a,b)=>(a.price??Infinity)-(b.price??Infinity):(a,b)=>a.name.localeCompare(b.name,'zh-Hant'));
   visible=list;$('count').textContent=`${list.length.toLocaleString()} 個品項`;$('export').disabled=!list.length;
-  $('resultTitle').textContent=selected?'三同候選藥品（含原品項）':'藥品搜尋結果（尚未比對）';
+  $('resultTitle').textContent=selected?(selected.matchEligible===false?'依主檔比對的同規格候選（須核對，含原品項）':'三同候選藥品（含原品項）'):'藥品搜尋結果（尚未比對）';
   const container=$('results');container.replaceChildren();
   if(selected && snapshotMismatch)$('message').textContent=`三同比對請選擇快照日 ${selected.snapshotDate}。其他日期僅供查詢價格有效期間。`;
   if(!list.length){const n=el('div',null,'empty');n.append(el('strong',drugs.length?'沒有符合條件的品項':'先加入藥品資料，開始查詢。'),el('p',drugs.length?'試試其他關鍵字、日期或取消篩選。三同比對僅限快照日；查無候選不代表沒有其他藥品。':'可匯入已整理的 JSON / CSV，或按「體驗示範」查看操作。正式藥品主檔尚未載入。'));container.append(n);}
@@ -65,7 +65,7 @@ try{const response=await fetch('./data/drugs.json');if(!response.ok)throw Error(
     official=applyNameCorrections(official,nameAudit);
     officialMeta={...data,nameAudit};
     if(official.length!==data.drugCount)throw Error('資料筆數檢核失敗');
-    $('message').textContent=`正式主檔：${data.recordCount.toLocaleString()} 筆歷次紀錄，${data.drugCount.toLocaleString()} 個健保碼。成分與品名為 ${data.snapshotDate} 快照；價格依所選日期查詢。複方與未完整核對的劑型不自動比對。另有 ${official.filter(d=>d.nameVerification).length} 個健保碼的中文名稱已依食藥署資料核對修正，${nameAudit.pendingCount} 項中文名稱待核對。`;
+    $('message').textContent=`正式主檔：${data.recordCount.toLocaleString()} 筆歷次紀錄，${data.drugCount.toLocaleString()} 個健保碼。成分與品名為 ${data.snapshotDate} 快照；價格依所選日期查詢。複方可依主檔所列成分查同規格候選，仍須核對完整處方；資料不完整者不開放比對。另有 ${official.filter(d=>d.nameVerification).length} 個健保碼的中文名稱已依食藥署資料核對修正，${nameAudit.pendingCount} 項中文名稱待核對。`;
   }else official=validate(data.drugs);drugs=official;officialMeta={...officialMeta,...data};setMode('正式資料',data.source,data.snapshotDate||data.updatedAt);render();}
 catch{$('metadata').textContent='正式資料載入失敗';$('message').textContent='請透過網站網址或本機 HTTP 伺服器開啟，可繼續使用匯入功能。';render();}
 
@@ -81,7 +81,7 @@ function drugTable(rows,original){
   const note=el('td');
   if(original&&d.code===original.code)note.append(el('span','查詢藥品','tag'));
   else if(original){note.append(el('span',d.price!=null&&original.price!=null&&d.price!==original.price?'支付價不同：'+d.price.toFixed(2)+'（原品項 '+original.price.toFixed(2)+'）':'支付價相同','badge'));}
-  else {const b=el('button',d.matchEligible===false?'待核對':'查詢三同');b.disabled=d.matchEligible===false;b.onclick=()=>choose(d);note.append(b);}
+  else {const b=el('button',!canCompare(d)?'待核對':d.matchEligible===false?'查同規格候選':'查詢三同');b.disabled=!canCompare(d);b.onclick=()=>choose(d);note.append(b);}
   if(d.matchReason)note.append(el('div',d.matchReason,'detail'));
   if(d.nameReviewReason)note.append(el('div','中文名待核對','badge'));
   row.append(note);body.append(row);
