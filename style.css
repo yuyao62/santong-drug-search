@@ -3,3 +3,19 @@
 
 /* Cool blue theme */
 body{background:radial-gradient(ellipse at 85% 0%,#dceaff 0,transparent 42%),#eff5fc}header{background:#ffffffd9}.pills span{background:#ffffffb3}.workspace{border-top:4px solid var(--accent)}.drug:hover{background:#f7faff}.searchbox input{color:#193653}.secondary:hover{background:#e1edfd}
+
+/* Dark clinical tables */
+:root{color:#e4eeeb;background:#111918;--accent:#55bcb5;--line:#344742}
+body{background:#111918;color:#e4eeeb}header,.workspace{background:#1b2623}.brand,.searchbox input{color:#e4eeeb}
+.intro p,.detail,.filters,.status,.notes p,footer,.code{color:#afc6c0}
+.searchbox,.empty,.secondary,select,input[type=date]{background:#14201d;color:#d7e9e3;border-color:#405b53}
+.pills span,#mode,.tag{background:#253d36;color:#73d0c4}
+#selected{background:#1b2925;border-color:#55bcb5}.empty strong{color:#d7e9e3}
+.table-scroll{width:100%;overflow-x:auto}.drug-table{border-collapse:collapse;width:100%;font-size:13px;min-width:1050px;text-align:left}
+.drug-table th{color:#97b5ab;font-size:12px;white-space:nowrap;padding:12px 10px;border-bottom:1px solid #3a5048}
+.drug-table td{padding:16px 10px;vertical-align:top;border-bottom:1px solid #34483f;line-height:1.65}
+.drug-table td:nth-child(2){min-width:230px}.drug-table td:nth-child(6){min-width:250px}
+.drug-table td:nth-child(7){min-width:165px}.drug-table tr:hover{background:#24392f}
+.drug-table .code{color:#6ec7b9}.drug-table .badge{background:#564823;color:#f0d995}
+.drug-table button{font-size:12px;padding:7px 12px}.drug-table .detail{font-size:12px}
+@media(max-width:720px){main{padding:25px 14px}.intro h1{font-size:32px}.workspace{padding:16px 12px}.table-scroll{border:1px solid #34483f;border-radius:8px}}
