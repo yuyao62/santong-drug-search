@@ -34,7 +34,13 @@ function render(){
 }
 function choose(d){selected=d;limit=40;const box=$('selected');box.hidden=false;box.replaceChildren(el('span','正在比對的原品項','tag'),el('h3',`${d.name} · ${d.code}`));const p=el('p',detail(d),'detail');p.style.whiteSpace='pre-line';box.append(p,el('p','清單已排除原品項。完整成分、含量、劑型、規格及官方分類分組均須一致；僅供藥師核對，不代表可直接替代。','detail'));const b=el('button','返回搜尋結果','secondary');b.onclick=()=>{clearSelection();render();};box.append(b);render();box.scrollIntoView({behavior:'smooth',block:'nearest'});}
 function clearSelection(){selected=null;$('selected').hidden=true;limit=40;}
-$('searchForm').onsubmit=e=>{e.preventDefault();clearSelection();render();};
+let searchTimer=null,composing=false;
+function searchNow(){clearTimeout(searchTimer);clearSelection();render();}
+function scheduleSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(searchNow,180);}
+$('query').addEventListener('compositionstart',()=>{composing=true;clearTimeout(searchTimer);});
+$('query').addEventListener('compositionend',()=>{composing=false;scheduleSearch();});
+$('query').addEventListener('input',e=>{if(!composing&&!e.isComposing)scheduleSearch();});
+$('searchForm').onsubmit=e=>{e.preventDefault();if(!composing)searchNow();};
 for(const id of ['active','date','sort'])$(id).addEventListener('change',()=>{limit=40;render();});
 $('more').onclick=()=>{limit+=40;render();};
 $('export').onclick=()=>{const blob=new Blob([toCSV(visible)],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download=`${mode==='示範資料'?'DEMO_':''}三同查詢_${$('date').value}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
