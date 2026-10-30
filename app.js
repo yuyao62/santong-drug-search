@@ -1,4 +1,4 @@
-import {validate,search,sameThree,activeOn,atDate,fromCSV,toCSV} from './core.js';
+import {applyNameCorrections,validate,search,sameThree,activeOn,atDate,fromCSV,toCSV} from './core.js';
 const $=id=>document.getElementById(id);
 const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 let official=[],drugs=[],visible=[],selected=null,limit=40,mode='正式資料';
@@ -23,6 +23,8 @@ function render(){
     const row=el('article',null,'drug'),body=el('div'),side=el('div',null,'drug-side');
     body.append(el('span',d.code,'code'),el('h3',d.name));
     if(d.englishName)body.append(el('span',d.englishName,'code'));
+    if(d.nameVerification){const note=el('a','中文名稱已核對 ↗','tag');note.href=d.nameVerification.source;note.target='_blank';note.rel='noopener';note.title=`${d.nameVerification.license}；原始名稱：${d.originalName}`;body.append(el('br'),note);}
+    if(d.nameReviewReason)body.append(el('div','中文名稱待核對：'+d.nameReviewReason,'badge'));
     if(mode==='示範資料')body.append(el('div','虛構示範品項，非實際藥品','badge'));
     const p=el('p',detail(d),'detail');p.style.whiteSpace='pre-line';body.append(p);
     if(!activeOn(d,date))body.append(el('span','查詢日無有效正支付價','badge'));
@@ -66,7 +68,12 @@ try{const response=await fetch('./data/drugs.json');if(!response.ok)throw Error(
       return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).json();
     }));
     official=validate(parts.flat());
+    const namesResponse=await fetch('./data/name-corrections.json');
+    if(!namesResponse.ok)throw Error('名稱查核資料載入失敗');
+    const nameAudit=await namesResponse.json();
+    official=applyNameCorrections(official,nameAudit);
+    officialMeta={...data,nameAudit};
     if(official.length!==data.drugCount)throw Error('資料筆數檢核失敗');
-    $('message').textContent=`正式主檔：${data.recordCount.toLocaleString()} 筆歷次紀錄，${data.drugCount.toLocaleString()} 個健保碼。成分與品名為 ${data.snapshotDate} 快照；價格依所選日期查詢。複方與未完整核對的劑型不自動比對。`;
-  }else official=validate(data.drugs);drugs=official;officialMeta=data;setMode('正式資料',data.source,data.snapshotDate||data.updatedAt);render();}
+    $('message').textContent=`正式主檔：${data.recordCount.toLocaleString()} 筆歷次紀錄，${data.drugCount.toLocaleString()} 個健保碼。成分與品名為 ${data.snapshotDate} 快照；價格依所選日期查詢。複方與未完整核對的劑型不自動比對。另有 ${official.filter(d=>d.nameVerification).length} 個健保碼的中文名稱已依食藥署資料核對修正，${nameAudit.pendingCount} 項中文名稱待核對。`;
+  }else official=validate(data.drugs);drugs=official;officialMeta={...officialMeta,...data};setMode('正式資料',data.source,data.snapshotDate||data.updatedAt);render();}
 catch{$('metadata').textContent='正式資料載入失敗';$('message').textContent='請透過網站網址或本機 HTTP 伺服器開啟，可繼續使用匯入功能。';render();}

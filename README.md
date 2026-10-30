@@ -12,9 +12,19 @@
 
 目前僅對欄位完整且未發現釋放型態疑慮的口服單方錠劑／膠囊列出候選，並額外要求官方分類分組相同。複方、非口服固體、疑似特殊釋放型態、缺欄或解碼異常者仍可搜尋，但不自動比對。分類分組不是臨床替代的充分條件。
 
-網站頁尾提供 SQLite GZIP 下載。部署時由 JSON 分檔產生 SQLite（drugs、ingredients、price_periods、metadata 四表），有健保碼、名稱、價格日期索引。下載後解壓縮即可用 SQLite 工具開啟。不含病人或處方資料。GitHub Pages 前端讀取壓縮 JSON，無須後端；需要支援 DecompressionStream 的瀏覽器。
+網站頁尾提供 SQLite GZIP 下載。部署時由 JSON 分檔產生 SQLite（drugs、ingredients、price_periods、metadata 四表，另有 name_audit 查核紀錄表），有健保碼、名稱、價格日期索引。下載後解壓縮即可用 SQLite 工具開啟。不含病人或處方資料。GitHub Pages 前端讀取壓縮 JSON，無須後端；需要支援 DecompressionStream 的瀏覽器。
 
 重新匯入官方 TXT：`python3 scripts/build_nhi.py RAW_DIRECTORY --as-of YYYY-MM-DD`。程式按 1,859 位元組 Big5 格式解析，遇到長度／日期／數值異常就停止，無法解碼字元保留替換符且停用該品項比對。SQLite 重建：`python3 scripts/build_sqlite.py`。更新資料後先執行 `npm test` 再提交全部資料分檔與清單。不會自動抓取官方資料。
+
+## 中文名稱查核修正
+
+2026-10-30 以食藥署「全部藥品許可證資料集」72,096 筆許可證紀錄交叉核對。中文名稱含問號或替換字元者共有 422 個健保碼，其中 415 個確認並修正，7 個未能可靠確認而保留原名、標示待核對。
+
+原始健保署 JSON 分檔不覆寫。`data/name-corrections.json` 保存每個健保碼的原中文／英文名、修正中文名、許可證、來源英文名、來源異動日、查核方法，以及官方 ZIP 的 SHA-256。網站與 SQLite 均套用相同校正，SQLite 的 `name_audit` 表可回查原文。名稱修正不會變更成分、含量、價格或三同比對資格，也不代表許可證目前有效；來源註銷狀態保留在校正證據中。
+
+查核條件：依健保碼取許可證流水號，並區分製／輸家族；英文品名經全半形、大小寫及標點正規化後須相同。只移除明確的「鋁箔/膠箔」包裝尾註，另對一組製造商括號與成分括號對調的 Benamine 英文名做明確對應。多個候選中文名、英文實質差異、官方名稱仍含私人造字或缺字，一律不自動修正。新版本主檔原名稱或英文名與校正依據不符時，網站拒絕套用舊校正。
+
+來源：https://data.gov.tw/dataset/9122 ，官方 ZIP：https://data.fda.gov.tw/data/opendata/export/36/json 。重建：`python3 scripts/verify_names.py TFDA_JSON.zip`，再執行 `npm test` 與 `python3 scripts/build_sqlite.py`。
 
 ## 在 GitHub 啟用
 

@@ -1,4 +1,17 @@
 export const normalize = value => String(value ?? '').normalize('NFKC').trim().replace(/\s+/g, ' ').toUpperCase();
+export function applyNameCorrections(drugs,audit) {
+  const corrections=new Map(audit.corrections.map(c=>[c.code,c]));
+  const pending=new Map(audit.pending.map(c=>[c.code,c]));
+  return drugs.map(d=>{
+    const c=corrections.get(d.code),p=pending.get(d.code);
+    if(c && c.originalName===d.name && c.englishName===d.englishName && c.name && !/[?\uFFFD\uE000-\uF8FF]/u.test(c.name)) {
+      return {...d,originalName:d.name,name:c.name,nameVerification:{license:c.license,source:audit.dataset,sourceEnglishName:c.sourceEnglishName,checkedAt:audit.checkedAt}};
+    }
+    if(c)return {...d,nameReviewReason:'名稱校正與主檔版本不一致，須核對'};
+    if(p)return {...d,nameReviewReason:p.reason};
+    return d;
+  });
+}
 export function validate(drugs) {
   if (!Array.isArray(drugs) || drugs.length > 100000) throw new Error('資料必須是陣列，且不超過 100,000 筆。');
   const codes = new Set();
